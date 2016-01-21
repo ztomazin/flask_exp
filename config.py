@@ -27,6 +27,9 @@ ADMINS = ['zachariahtomazin@gmail.com']
 # pagination
 POSTS_PER_PAGE = 3
 
+# Whoosh does not work on Heroku
+WHOOSH_ENABLED = os.environ.get('HEROKU') is None
+
 WHOOSH_BASE = os.path.join(basedir, 'search.db')
 MAX_SEARCH_RESULTS = 50
 
