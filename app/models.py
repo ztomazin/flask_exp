@@ -1,28 +1,23 @@
-from app import db
 from hashlib import md5
+import re
+from app import db
 from app import app
-
+from config import WHOOSH_ENABLED
 
 import sys
 if sys.version_info >= (3, 0):
     enable_search = False
 else:
-    enable_search = True
-    import flask.ext.whooshalchemy as whooshalchemy
-
-from config import WHOOSH_ENABLED
-
-enable_search = WHOOSH_ENABLED
-if enable_search:
-    import flask.ext.whooshalchemy as whooshalchemy
+    enable_search = WHOOSH_ENABLED
+    if enable_search:
+        import flask.ext.whooshalchemy as whooshalchemy
 
 
-
-followers = db.Table('followers',
+followers = db.Table(
+    'followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
 )
-
 
 
 class User(db.Model):
@@ -32,12 +27,16 @@ class User(db.Model):
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime)
-    followed = db.relationship('User', 
-                               secondary=followers, 
-                               primaryjoin=(followers.c.follower_id == id), 
-                               secondaryjoin=(followers.c.followed_id == id), 
-                               backref=db.backref('followers', lazy='dynamic'), 
+    followed = db.relationship('User',
+                               secondary=followers,
+                               primaryjoin=(followers.c.follower_id == id),
+                               secondaryjoin=(followers.c.followed_id == id),
+                               backref=db.backref('followers', lazy='dynamic'),
                                lazy='dynamic')
+
+    @staticmethod
+    def make_valid_nickname(nickname):
+        return re.sub('[^a-zA-Z0-9_\.]', '', nickname)
 
     @staticmethod
     def make_unique_nickname(nickname):
@@ -49,7 +48,7 @@ class User(db.Model):
             if User.query.filter_by(nickname=new_nickname).first() is None:
                 break
             version += 1
-        return new_nickname    
+        return new_nickname
 
     @property
     def is_authenticated(self):
@@ -70,8 +69,8 @@ class User(db.Model):
             return str(self.id)  # python 3
 
     def avatar(self, size):
-        return 'http://www.gravatar.com/avatar/%s?d=mm&s=%d' % (md5(self.email.encode('utf-8')).hexdigest(), size)
-
+        return 'http://www.gravatar.com/avatar/%s?d=mm&s=%d' % \
+            (md5(self.email.encode('utf-8')).hexdigest(), size)
 
     def follow(self, user):
         if not self.is_following(user):
@@ -84,7 +83,8 @@ class User(db.Model):
             return self
 
     def is_following(self, user):
-        return self.followed.filter(followers.c.followed_id == user.id).count() > 0
+        return self.followed.filter(
+            followers.c.followed_id == user.id).count() > 0
 
     def followed_posts(self):
         return Post.query.join(
@@ -92,8 +92,7 @@ class User(db.Model):
                 followers.c.follower_id == self.id).order_by(
                     Post.timestamp.desc())
 
-
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return '<User %r>' % (self.nickname)
 
 
@@ -104,12 +103,11 @@ class Post(db.Model):
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    language = db.Column(db.String(5))
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return '<Post %r>' % (self.body)
+
 
 if enable_search:
     whooshalchemy.whoosh_index(app, Post)
-
-
-
