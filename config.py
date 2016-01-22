@@ -33,3 +33,4 @@ WHOOSH_ENABLED = os.environ.get('HEROKU') is None
 WHOOSH_BASE = os.path.join(basedir, 'search.db')
 MAX_SEARCH_RESULTS = 50
 
+DATABASE_QUERY_TIMEOUT = .5
