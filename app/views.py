@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, session, url_for, request, \
 from flask.ext.login import login_user, logout_user, current_user, \
     login_required
 from flask.ext.sqlalchemy import get_debug_queries
-from flask.ext.babel import gettext
+#from flask.ext.babel import gettext
 from datetime import datetime
 from guess_language import guessLanguage
 from app import app, db, lm, oid#, babel
@@ -72,7 +72,7 @@ def index(page=1):
                     author=g.user, language=language)
         db.session.add(post)
         db.session.commit()
-        flash(gettext('Your post is now live!'))
+        flash('Your post is now live!')
         return redirect(url_for('index'))
     posts = g.user.followed_posts().paginate(page, POSTS_PER_PAGE, False)
     return render_template('index.html',
@@ -99,7 +99,7 @@ def login():
 @oid.after_login
 def after_login(resp):
     if resp.email is None or resp.email == "":
-        flash(gettext('Invalid login. Please try again.'))
+        flash('Invalid login. Please try again.')
         return redirect(url_for('login'))
     user = User.query.filter_by(email=resp.email).first()
     if user is None:
@@ -134,7 +134,7 @@ def logout():
 def user(nickname, page=1):
     user = User.query.filter_by(nickname=nickname).first()
     if user is None:
-        flash(gettext('User %(nickname)s not found.', nickname=nickname))
+        flash('User %(nickname)s not found.', nickname=nickname)
         return redirect(url_for('index'))
     posts = user.posts.paginate(page, POSTS_PER_PAGE, False)
     return render_template('user.html',
@@ -151,7 +151,7 @@ def edit():
         g.user.about_me = form.about_me.data
         db.session.add(g.user)
         db.session.commit()
-        flash(gettext('Your changes have been saved.'))
+        flash('Your changes have been saved.')
         return redirect(url_for('edit'))
     elif request.method != "POST":
         form.nickname.data = g.user.nickname
@@ -167,15 +167,15 @@ def follow(nickname):
         flash('User %s not found.' % nickname)
         return redirect(url_for('index'))
     if user == g.user:
-        flash(gettext('You can\'t follow yourself!'))
+        flash('You can\'t follow yourself!')
         return redirect(url_for('user', nickname=nickname))
     u = g.user.follow(user)
     if u is None:
-        flash(gettext('Cannot follow %(nickname)s.', nickname=nickname))
+        flash('Cannot follow %(nickname)s.', nickname=nickname)
         return redirect(url_for('user', nickname=nickname))
     db.session.add(u)
     db.session.commit()
-    flash(gettext('You are now following %(nickname)s!', nickname=nickname))
+    flash('You are now following %(nickname)s!', nickname=nickname)
     follower_notification(user, g.user)
     return redirect(url_for('user', nickname=nickname))
 
@@ -188,16 +188,16 @@ def unfollow(nickname):
         flash('User %s not found.' % nickname)
         return redirect(url_for('index'))
     if user == g.user:
-        flash(gettext('You can\'t unfollow yourself!'))
+        flash('You can\'t unfollow yourself!')
         return redirect(url_for('user', nickname=nickname))
     u = g.user.unfollow(user)
     if u is None:
-        flash(gettext('Cannot unfollow %(nickname)s.', nickname=nickname))
+        flash('Cannot unfollow %(nickname)s.', nickname=nickname)
         return redirect(url_for('user', nickname=nickname))
     db.session.add(u)
     db.session.commit()
-    flash(gettext('You have stopped following %(nickname)s.',
-                  nickname=nickname))
+    flash('You have stopped following %(nickname)s.',
+                  nickname=nickname)
     return redirect(url_for('user', nickname=nickname))
 
 

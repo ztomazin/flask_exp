@@ -11,9 +11,18 @@ OPENID_PROVIDERS = [
     {'name': 'Flickr', 'url': 'http://www.flickr.com/<username>'},
     {'name': 'MyOpenID', 'url': 'https://www.myopenid.com'}]
 
+if os.environ.get('DATABASE_URL') is None:
+    SQLALCHEMY_DATABASE_URI = ('sqlite:///' + os.path.join(basedir, 'app.db') +
+                               '?check_same_thread=False')
+else:
+    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
+SQLALCHEMY_RECORD_QUERIES = True
+WHOOSH_BASE = os.path.join(basedir, 'search.db')
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
-SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository') 
+# Whoosh does not work on Heroku
+WHOOSH_ENABLED = os.environ.get('HEROKU') is None
+DATABASE_QUERY_TIMEOUT = .5
 
 # mail server settings
 MAIL_SERVER = 'localhost'
@@ -27,10 +36,8 @@ ADMINS = ['zachariahtomazin@gmail.com']
 # pagination
 POSTS_PER_PAGE = 3
 
-# Whoosh does not work on Heroku
-WHOOSH_ENABLED = os.environ.get('HEROKU') is None
+
 
 WHOOSH_BASE = os.path.join(basedir, 'search.db')
 MAX_SEARCH_RESULTS = 50
 
-DATABASE_QUERY_TIMEOUT = .5
